@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth, googleProvider, signInWithPopup, signOut, handleFirestoreError, OperationType } from '../firebase';
+import logger from '../logger';
 import type { Note, Folder, ViewFilter, UserProfile } from '../types';
 
 export type SyncState = 'synced' | 'saving' | 'offline' | 'error';
@@ -183,16 +184,22 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const loginWithGoogle = async () => {
     try {
+      logger.logAuthEvent('NotesContext', 'loginWithGoogle.start');
       await signInWithPopup(auth, googleProvider);
+      logger.logAuthEvent('NotesContext', 'loginWithGoogle.success', 'info', { userId: user?.uid });
     } catch (err) {
+      logger.logAuthEvent('NotesContext', 'loginWithGoogle.error', 'error', { error: err, userId: user?.uid });
       console.error('Login error:', err);
     }
   };
 
   const logout = async () => {
     try {
+      logger.logAuthEvent('NotesContext', 'logout.start');
       await signOut(auth);
+      logger.logAuthEvent('NotesContext', 'logout.success', 'info');
     } catch (err) {
+      logger.logAuthEvent('NotesContext', 'logout.error', 'error', { error: err });
       console.error('Logout error:', err);
     }
   };

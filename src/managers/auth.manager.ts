@@ -1,5 +1,6 @@
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import logger from '../logger';
 
 interface UserProfile {
   uid: string;
@@ -39,6 +40,7 @@ export class AuthManager {
 
   async loginWithGoogle(): Promise<UserProfile | null> {
     try {
+      logger.logAuthEvent('AuthManager', 'loginWithGoogle.start');
       const result = await signInWithPopup(auth, googleProvider);
       this.user = {
         uid: result.user.uid,
@@ -46,8 +48,10 @@ export class AuthManager {
         email: result.user.email || null,
         photoURL: result.user.photoURL || null,
       };
+      logger.logAuthEvent('AuthManager', 'loginWithGoogle.success', 'info', { userId: this.user?.uid });
       return this.user;
     } catch (err) {
+      logger.logAuthEvent('AuthManager', 'loginWithGoogle.error', 'error', { error: err });
       console.error('Google login error:', err);
       return null;
     }
@@ -55,9 +59,12 @@ export class AuthManager {
 
   async logout(): Promise<void> {
     try {
+      logger.logAuthEvent('AuthManager', 'logout.start');
       await signOut(auth);
       this.user = null;
+      logger.logAuthEvent('AuthManager', 'logout.success', 'info');
     } catch (err) {
+      logger.logAuthEvent('AuthManager', 'logout.error', 'error', { error: err });
       console.error('Logout error:', err);
       throw err;
     }
